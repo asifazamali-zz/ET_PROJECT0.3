@@ -1,0 +1,96 @@
+
+
+
+{% load staticfiles %}
+
+{% if user.is_authenticated %}
+<style>
+    #disable_button{
+        visibility:hidden;
+    }
+</style>
+<script src="{%static 'js/jquery.min.js' %}"></script>
+
+ <script src="{%static 'js/jquery.gracefulWebSocket.js' %}"></script>
+
+<script>
+
+    $(document).ready( function() {
+    window.chat = {}; //variable
+    chat.ws = $.gracefulWebSocket("ws://10.42.0.1:9000/ws");//ws initialization
+    console.log(chat.ws);
+    chat.send = function (message) {                //
+      chat.ws.send(message);                      // data sent to server
+      
+    }
+
+    chat.ws.onopen = function() {
+    {% if user.is_superuser %}
+        chat.send('list:{{list}}');
+    {%else%}
+        console.log("hello");
+        chat.send('{{user.username}}: hello');
+    {% endif %}
+    }
+
+    chat.ws.onmessage = function (event) {
+      var messageFromServer = event.data;        //data from server
+      var list_element = document.createElement('li');
+      list_element.innerHTML = messageFromServer;
+      $("#message_list ul").prepend(list_element);
+    };
+
+    var inputBox = document.getElementById("inputbox");
+    var name = document.getElementById("hidden");
+    {%if not user.is_superuser%}
+    inputbox.addEventListener("keydown", function(e) {
+      if (!e) { var e = window.event; }
+
+      if (e.keyCode == 13) {
+        e.preventDefault(); // sometimes useful
+        var msg= name.value.concat(":"+inputbox.value);
+        chat.send(msg);
+        inputbox.value="";
+      }
+    }, false);
+    {%endif%}
+    $('#enable_button').click( function(){
+        enableButton = document.getElementById('enable_button');
+        enableButton.style.visibility='hidden';
+        chat.send(name.value.concat(":enable"));
+        disableButton = document.getElementById('disable_button');
+        disableButton.style.visibility='visible';
+
+
+    });
+    $('#disable_button').click( function(){
+        disableButton = document.getElementById('disable_button');
+        disableButton.style.visibility='hidden';
+        chat.send(name.value.concat(":disable"));
+        enableButton = document.getElementById('enable_button');
+        enableButton.style.visibility='visible';
+
+
+    });
+    });
+
+ </script>
+
+<h1> {{ user.username }} </h1>
+<input type="hidden" value= '{{user.username}}' id="hidden"/>
+{% if user.is_superuser %}
+<input type="button" id="enable_button" value="Enable Chat" >
+<input type="button" id="disable_button" value="Disable Chat" >
+
+{%else%}
+
+<textarea name="term" id="inputbox" cols="40" rows="4"></textarea>
+{%endif%}
+<div id="message_list">
+  <ul style="list-style: none;">
+  </ul>
+</div>
+{% else %}
+You have not logged in:
+<br><a href="accounts/login/">Login</a>
+{%endif%}
