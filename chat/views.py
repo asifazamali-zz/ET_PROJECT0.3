@@ -27,7 +27,7 @@ def assignment(l,correct):
 	}
     check=switcher.get(s,False)
     if(check):
-	    return [check]
+	    return check
     if not total:
         return
     a_ratio=(a_len/total)
@@ -587,6 +587,7 @@ def chat_room(request):
     re_list_c=[]
     re_list_d=[]
     correct=1
+    _id=''
     posted=Posted_Question.objects.all()
     if posted:
         _id=posted[0].question_id
@@ -633,7 +634,7 @@ def chat_room(request):
     else:
         list=[[],[],[],[]]
     #print list
-    return render(request, 'chats/chat_room.html', {'list':list,})
+    return render(request, 'chats/chat_room.html', {'list':list,'question_id':_id})
 
 def longpoll_chat_room(request, chat_room_id):
     chat = get_object_or_404(ChatRoom, pk=chat_room_id)

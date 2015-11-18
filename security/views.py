@@ -11,6 +11,15 @@ from .forms import QuestionForm,AnswerForm
 def registration_complete(request):
     return render(request,'registration/registration_complete.html',{})
 
+
+# def save(self, *args, **kwargs):
+#     if self.pk is None:
+#         saved_image = self.image
+#         self.image = None
+#         super(Question, self).save(*args, **kwargs)
+#         self.image = saved_image
+#     super(Question, self).save(*args, **kwargs)
+
 def edit(request):
     print "inside edit"
 
@@ -59,7 +68,7 @@ def quiz(request):
     re_list_c=[]
     re_list_d=[]
     correct=1
-    form=QuestionForm(request.POST or None)
+    form=QuestionForm(request.POST,request.FILES)
     ansform = AnswerForm(request.POST or None)
     number_of_times='0'
     _id=-1
@@ -98,21 +107,31 @@ def quiz(request):
         ques=''
     if request.method=='POST':
         if form.is_valid():
+            instance = form.save(commit=False)
             correct=request.POST.get('correct')
  #           print default_dict
             model=Question.objects.filter(id=int(request.POST.get('id')))
             if(model):
-                model.update(question= str(request.POST.get('question')),option_a=str(request.POST.get('option_a')),
-                             option_b=str(request.POST.get('option_b')),option_c=str(request.POST.get('option_c')),
-                             option_d=str(request.POST.get('option_d')),option_correct=str(request.POST.get('correct')),
-                            )
-            else:
-                instance = form.save(commit=False)
-                print instance.question
-                print "image",request.POST.get('image')
-                instance.option_correct=correct
-                #bool,created=Question.objects.update_or_create(id=request.POST.get('id'),defaults=default_dict)
-                form.save()
+                model.delete()
+                print "previous entry deleted"
+                # model.update(question= str(request.POST.get('question')),option_a=str(request.POST.get('option_a')),
+                #              option_b=str(request.POST.get('option_b')),option_c=str(request.POST.get('option_c')),
+                #              option_d=str(request.POST.get('option_d')),option_correct=str(request.POST.get('correct')),
+                #              image='uploads/'+str(request.POST.get('question')+'/'+str(request.FILES['image'].name))   
+                #             )
+            
+            print instance.question
+            question_id = str(request.POST.get('id'))
+            instance.option_correct=correct
+            #bool,created=Question.objects.update_or_create(id=request.POST.get('id'),defaults=default_dict)
+            form.save()
+            sql=Question.objects.latest('id')
+            if(sql):
+                f=open('static_in_env/media_root/uploads/chats/'+str(sql.id)+'.txt','w')
+                f.write('No Chat happens!!')
+                f.close()
+                sql.file_path='/uploads/chats/'+str(sql.id)+'.txt'
+                sql.save()
             form=QuestionForm()
         else:
             print 'not valid'

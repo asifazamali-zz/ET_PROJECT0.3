@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 #     #print instance.author
 #     return
 def get_upload_file_name(self,filename):
-    print 'get_upload_file_name',self.id,filename
+    print 'get_upload_file_name',self.question,filename
     return "uploads/%s/%s" % (self.question,filename)
 class Question(models.Model):
     question = models.CharField(max_length=200)
@@ -19,8 +19,9 @@ class Question(models.Model):
     option_b = models.CharField(max_length=200)
     option_c = models.CharField(max_length=200)
     option_d = models.CharField(max_length=200)
-    image = models.FileField(upload_to="uploads/%Y/%m/%d",default='00000')
+    image = models.ImageField(upload_to=get_upload_file_name,default='00000')
     option_correct = models.CharField(max_length=2)
+    file_path = models.CharField(max_length=200,default='00000')
     class Meta:
         db_table='questions'
 

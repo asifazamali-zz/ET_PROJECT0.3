@@ -15,7 +15,7 @@
     }
     </style>
   <script>
-     function readQuestion(quest_id,question,option_a,option_b,option_c,option_d,option_correct){
+     function readQuestion(quest_id,question,option_a,option_b,option_c,option_d,option_correct,img_path){
          var id=document.getElementById('id');
          var quest=document.getElementById('id_question');
          var a= document.getElementById('id_option_a');
@@ -23,6 +23,20 @@
          var c= document.getElementById('id_option_c');
          var d= document.getElementById('id_option_d');
          var correct= document.getElementById(option_correct).checked=true;
+         var image = document.getElementById('image');
+         var img=document.createElement('img');
+         var file_link = document.getElementById('link');
+         var link = document.createElement('a');
+         var t = document.createTextNode("Chat File Link");
+         link.href={{MEDIA_URL}}+'/uploads/chats/'+quest_id+".txt"
+         link.target='_blank'
+         link.appendChild(t)
+         file_link.appendChild(link);
+         img.src=img_path;
+         img.width='500';
+         img.height='508';
+         img.alt='question_image_not_exits';
+         image.appendChild(img);
          quest.value=question;
          a.value=option_a;
          b.value=option_b;
@@ -39,14 +53,17 @@
 
       {% if ques %}
         {%if user.is_superuser%}
-          <b>Question{{ques.id}}</b> has posted!<form method="post" action="{%url 'delete_post'%}">{% csrf_token %}
+          <b>Question{{ques.id}}</b> has posted!<form method="post" action="{%url 'delete_post'%}">
+          {% csrf_token %}
           <input type="hidden" name="quest_id" value={{ques.id}}>
           <input type='submit' value='Remove'>
           </form>
         
         {%else%}
+          {% if user.is_authenticated %}
           <form action ="" method = "POST">{%csrf_token%}
-            Question{{ques.question}}<br>
+            <b>Question:</b>{{ques.question}}<br>
+            <img src="{{ques.image.url}}" width='500' height='500'><br>
             <input type="hidden" name="question_id" value="{{ ques.id }}">
             <input type="hidden" name="number_of_times" value="{{number_of_times}}">
             <input type="radio" name="options"  value="0">{{ ques.option_a }}<br>
@@ -55,6 +72,7 @@
             <input type="radio" name="options" value="3">{{ ques.option_d }}<br>
             <input type="submit" value="Submit">
           </form>
+          {%endif%}
         {%endif%}
       {% else %}
           {{ submission }}
@@ -82,7 +100,7 @@
 
                   <li>{{  quest.question }}
                       <input  type="button" name="edit"
-                              onclick="readQuestion('{{ quest.id }}','{{ quest.question }}','{{ quest.option_a }}','{{ quest.option_b }}','{{ quest.option_c }}','{{ quest.option_d }}','{{ quest.option_correct }}')" value="Edit"/>
+                              onclick="readQuestion('{{ quest.id }}','{{ quest.question }}','{{ quest.option_a }}','{{ quest.option_b }}','{{ quest.option_c }}','{{ quest.option_d }}','{{ quest.option_correct }}','{{quest.image.url}}')" value="Edit"/>
                       <input form='delete_form' type="hidden" value="{{ quest.id }}" name="quest_id"/>
                       <input form='post_form' type="hidden" value="{{ quest.id }}" name="quest_id"/>
                       <input form='repost_form' type="hidden" value="{{ quest.id }}" name="quest_id"/>
@@ -102,23 +120,29 @@
 </div>
 {% if user.is_superuser %}
 <div class="row">
-  <div class="col-md-2"></div>
-  <div class="col-md-10">
+  <div class="col-md-2">
+  </div>  
+  <div class="col-md-4">
 
      <form enctype="multipart/form-data" action ="" method = "POST" >{%csrf_token%}
 
       Question<br>
       {{ form.question }}<br>
       {{ form.image }}<br>
-      <input type="hidden" name="id" value="0">
-      Option_a{{ form.option_a }}<input type="radio" class='radio_1' name="correct" value="0" id="0"checked><br>
+      <input type="hidden" name="id" id='id' value="0">
+      Option_a{{ form.option_a }}<input type="radio" class='radio_1' name="correct" value="0" id="0"checked>
+      <br>
       Option_b{{ form.option_b }}<input type="radio" class='radio_1'  name="correct" value="1" id="1"><br>
       Option_c{{ form.option_c }}<input type="radio" class='radio_1'  name="correct" value="2" id="2"><br>
       Option_d{{ form.option_d }}<input type="radio" class='radio_1'  name="correct" value="3" id="3"><br>
       
       <input type="submit" value="Submit">
      </form>
+     <div id="link"></div>
   </div>
+  <div class="col-md-6">
+    <div id="image" ></div>
+  </div> 
 </div>
 {% endif %}
 {% endblock %}
