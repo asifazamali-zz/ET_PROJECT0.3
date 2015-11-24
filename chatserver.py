@@ -7,6 +7,7 @@ from twisted.internet import task
 from twisted.web.server import NOT_DONE_YET
 import HTMLParser
 import json
+from sets import Set
 write_lock = thread.allocate_lock() #forcing synchronized writes between the various kinds of clients
 
 class WebsocketChat(basic.LineReceiver):
@@ -18,7 +19,6 @@ class WebsocketChat(basic.LineReceiver):
 	self.transport.write('connected ....\n')
 	self.factory.clients.append(self)
     #print str(self.factory.clients)
-    
     def connectionLost(self, reason):
         print "socket connection lost, Reason",reason
         self.factory.num_connections-=1
@@ -30,19 +30,31 @@ class WebsocketChat(basic.LineReceiver):
 
     def dataReceived(self, data):
         msg_list=[]
+        f=''
         data=str(HTMLParser.HTMLParser().unescape(data))
         print "data_recieved"+data
         split=data.split(':')
         self.factory.sender=split[0]
         if(split[0]=='list'):
+            if 'admin' not in self.factory.client_name.keys():
+                self.factory.client_name.update({'admin':self.factory.clients[len(self.factory.clients)-1]})
             self.factory.list=json.loads(split[1])
             print self.factory.list
         elif(split[1]=='enable' and split[0]=='admin' ):
             self.factory.enable=True
+            #question_id = request.POST.get('question_id')
+            self.factory.question_id=split[2]
+            if(self.factory.question_id):
+                print "question_id",self.factory.question_id
+                #file_path=('static_in_env/media_root/uploads/chats/'str(%s.txt')%(self.factory.question_id)
+                #print file_path
+                self.factory.file_desc=open('static_in_env/media_root/uploads/chats/'+str(self.factory.question_id)+'.txt','w')
             print "enable chat"
         elif(split[1]=='disable' and split[0]=='admin'):
             self.factory.enable=False
             print 'disable chat'
+            if(self.factory.file_desc):
+                self.factory.file_desc.close()
         else:
             print "number_of_connections",self.factory.num_connections
             if self.factory.sender not in self.factory.client_name.keys():
@@ -52,14 +64,25 @@ class WebsocketChat(basic.LineReceiver):
         write_lock.acquire()
         self.factory.messages[float(time.time())] = data
         write_lock.release()
-
         if(self.factory.enable):
-            for list in self.factory.list:
-                if self.factory.sender in list:
-                    msg_list=list
-                    print list
-                    break
-            self.updateClients(data,msg_list)
+            if(self.factory.file_desc):
+                print "writing "+data+ "to file"
+                self.factory.file_desc.write(data+"\n")
+            if self.factory.sender=='admin':
+                print 'admin_sender'
+                msg_list=Set([])
+                for list in self.factory.list:
+                    for items in list:
+                        msg_list.add(items)
+                print "broadcast message",msg_list
+                self.updateClients(data,msg_list)
+            else:
+                for list in self.factory.list:
+                    if self.factory.sender in list:
+                        msg_list=list
+                        print list
+                        break
+                self.updateClients(data,msg_list)
         else:
             try:
                 self.factory.client_name[self.factory.sender].message("chat not yet enable by admin")
@@ -69,12 +92,14 @@ class WebsocketChat(basic.LineReceiver):
 
     def updateClients(self, data,list1):
         print "updateClients"
+        self.factory.client_name['admin'].message(data)
         for c in list1:
             print str(c)
             try:
                 self.factory.client_name[str(c)].message(data)
+                
             except KeyError:
-                self.factory.client_name[self.factory.sender].message("others not connected yet")
+                self.factory.client_name[self.factory.sender].message(str(c)+"  not connected yet")
                 print str(c),"not connected yet."
                 pass
 
@@ -92,7 +117,7 @@ from twisted.internet import protocol
 from twisted.application import service, internet
 
 from twisted.internet.protocol import Factory
-class ChatFactory(Factory):
+class ChatFactory(Factory):###################this one is global variables 
     protocol = WebsocketChat
     clients = []
     messages = {}
@@ -101,7 +126,8 @@ class ChatFactory(Factory):
     sender=''
     num_connections=0
     enable=False
-
+    file_desc=''
+    question_id=''
 class HttpChat(Resource):
     #optimization 
     isLeaf = True
@@ -131,6 +157,7 @@ class HttpChat(Resource):
  
     def render_POST(self, request):
         request.setHeader('Content-Type', 'application/json')
+        print "render_POST"
         args = request.args
         if 'new_message' in args:
             write_lock.acquire()

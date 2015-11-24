@@ -28,7 +28,7 @@
          var file_link = document.getElementById('link');
          var link = document.createElement('a');
          var t = document.createTextNode("Chat File Link");
-         link.href={{MEDIA_URL}}+'/uploads/chats/'+quest_id+".txt"
+         link.href='/media/uploads/chats/'+quest_id+".txt"
          link.target='_blank'
          link.appendChild(t)
          file_link.appendChild(link);
@@ -50,32 +50,35 @@
   <div class="row">
   <div class="col-md-2"></div>
   <div class="col-md-2">
-
+      <div id='image'></div> 
       {% if ques %}
-        {%if user.is_superuser%}
-          <b>Question{{ques.id}}</b> has posted!<form method="post" action="{%url 'delete_post'%}">
-          {% csrf_token %}
-          <input type="hidden" name="quest_id" value={{ques.id}}>
-          <input type='submit' value='Remove'>
-          </form>
-        
+        {% if user.is_superuser %}
+            <b>Question:{{ ques.question}}</b> has been posted.
+            <form action="{% url 'delete_post'%}" method="post">{%csrf_token%}
+                    <input type="hidden" name="quest_id" value="{{ ques.id }}">
+                    <input type="submit" value="RemovePost">
+            </form>
+            
+      <br>
         {%else%}
-          {% if user.is_authenticated %}
-          <form action ="" method = "POST">{%csrf_token%}
-            <b>Question:</b>{{ques.question}}<br>
-            <img src="{{ques.image.url}}" width='500' height='500'><br>
-            <input type="hidden" name="question_id" value="{{ ques.id }}">
-            <input type="hidden" name="number_of_times" value="{{number_of_times}}">
-            <input type="radio" name="options"  value="0">{{ ques.option_a }}<br>
-            <input type="radio" name="options" value="1">{{ ques.option_b }}<br>
-            <input type="radio" name="options" value="2">{{ ques.option_c }}<br>
-            <input type="radio" name="options" value="3">{{ ques.option_d }}<br>
-            <input type="submit" value="Submit">
-          </form>
-          {%endif%}
+        {% if user.is_authenticated %}
+      <form action ="" method = "POST">{%csrf_token%}
+       <b>{{post}}</b><br>
+        Question: {{ques.question}}<br>
+        <img src="{{ques.image.url}}" width='250' height='250'><br>
+        <input type="hidden" name="number_of_times" value="{{ number_of_times }}"/>
+        <input type="hidden" name="question_id" value="{{ ques.id }}">
+        <input type="radio" name="options"  value="0">{{ ques.option_a }}<br>
+        <input type="radio" name="options" value="1">{{ ques.option_b }}<br>
+        <input type="radio" name="options" value="2">{{ ques.option_c }}<br>
+        <input type="radio" name="options" value="3">{{ ques.option_d }}<br>
+        <input type="submit" value="Submit">
+      </form>
+         {% endif %}
         {%endif%}
       {% else %}
-          {{ submission }}
+          <!--<div id="label1">No Questions Posted Yet</div>-->
+          <div id="lable2">{{ submission }}</div>
       {% endif %}
 
 
@@ -140,9 +143,24 @@
      </form>
      <div id="link"></div>
   </div>
-  <div class="col-md-6">
-    <div id="image" ></div>
-  </div> 
+ <div class="col-md-3">
+      <ol style="list-style-type:none">
+      <b>Previous Review:</b>
+      <li> Option_a:{{option_a}}</li>
+      <li> Option_b:{{option_b}}</li>
+      <li> Option_c:{{option_c}}</li>
+      <li> Option_d:{{option_d}}</li>
+      </ol>
+  </div>
+  <div class="col-md-2">
+      <b>Post Review:</b>
+      <ol style="list-style-type:none">
+      <li> Option_a:{{re_option_a}}</li>
+      <li> Option_b:{{re_option_b}}</li>
+      <li> Option_c:{{re_option_c}}</li>
+      <li> Option_d:{{re_option_d}}</li>
+      </ol>
+  </div>
 </div>
 {% endif %}
 {% endblock %}

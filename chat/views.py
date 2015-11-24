@@ -27,7 +27,7 @@ def assignment(l,correct):
 	}
     check=switcher.get(s,False)
     if(check):
-	    return check
+	    return [check]
     if not total:
         return
     a_ratio=(a_len/total)

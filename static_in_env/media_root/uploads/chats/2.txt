@@ -1,0 +1,10 @@
+admin:enable:2
+jkmadathil: hello
+stsm: hello
+jkmadathil:hello stsm
+stsm:Hi
+jkmadathil:I gave option 2 as answer
+stsm:How re u
+stsm:Yeap hjk
+stsm:Jsr
+jkmadathil:Ok it seems working

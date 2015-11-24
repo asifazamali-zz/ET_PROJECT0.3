@@ -1,0 +1,7 @@
+admin:enable:5
+mobile1: hello
+mobile1:Hhdjkd
+mobile2: hello
+mobile2:Hhdjfncm
+admin:Hi this is from admin
+admin:I'm closing the chat server.
